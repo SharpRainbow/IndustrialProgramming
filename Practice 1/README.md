@@ -3,4 +3,4 @@ ER-диаграмма
 ![erd](./ERD.png)
 
 Use-Case диаграмма
-![usecase](./Use%20Case)
+![usecase](./Use%20Case.png)
