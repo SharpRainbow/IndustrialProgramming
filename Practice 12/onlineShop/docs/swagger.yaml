@@ -1,0 +1,939 @@
+basePath: /api/v1
+definitions:
+  models.Category:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.ClientOrder:
+    properties:
+      clientId:
+        type: integer
+      date:
+        type: string
+      id:
+        type: integer
+      receipt:
+        $ref: '#/definitions/models.Receipt'
+      status:
+        $ref: '#/definitions/models.Status'
+    type: object
+  models.ClientOrderUpdate:
+    properties:
+      products:
+        items:
+          $ref: '#/definitions/models.ProductInOrderUpdate'
+        type: array
+      receipt_id:
+        type: integer
+      status_id:
+        type: integer
+    type: object
+  models.Country:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.ErrorResponse:
+    properties:
+      error:
+        description: Example error message
+        example: Error message
+        type: string
+    type: object
+  models.Manufacturer:
+    properties:
+      country:
+        $ref: '#/definitions/models.Country'
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.Parameter:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      value:
+        type: string
+    type: object
+  models.Product:
+    properties:
+      category:
+        $ref: '#/definitions/models.Category'
+      description:
+        type: string
+      id:
+        type: integer
+      manufacturer:
+        $ref: '#/definitions/models.Manufacturer'
+      name:
+        type: string
+      pictureUrl:
+        type: string
+      price:
+        type: number
+    type: object
+  models.ProductInOrder:
+    properties:
+      count:
+        type: integer
+      price:
+        type: number
+      product:
+        $ref: '#/definitions/models.Product'
+    type: object
+  models.ProductInOrderUpdate:
+    properties:
+      count:
+        type: integer
+      product_id:
+        type: integer
+    type: object
+  models.Receipt:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.Status:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.User:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+    type: object
+  models.UserLogin:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+host: 155138.msk.web.highserver.ru:8080
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://www.example.com/support
+  description: This is a sample server for an online shop.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://example.com/terms/
+  title: Online Shop API
+  version: "1.0"
+paths:
+  /categories:
+    get:
+      description: Fetches a single category by ID or paginated list of categories
+        based on query parameters.
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: 5
+        description: Items per page for pagination
+        in: query
+        name: limit
+        type: integer
+      responses:
+        "200":
+          description: List of categories or single category
+          schema:
+            items:
+              $ref: '#/definitions/models.Category'
+            type: array
+        "400":
+          description: Invalid ID format or query parameters
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction or unable to fetch category
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get category details or a list of categories
+      tags:
+      - categories
+  /categories/{id}:
+    get:
+      description: Fetches a single category by ID
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Category ID
+        in: path
+        name: id
+        type: integer
+      responses:
+        "200":
+          description: List of categories or single category
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Invalid ID format or query parameters
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction or unable to fetch category
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get category details
+      tags:
+      - categories
+  /categories/{id}/params:
+    get:
+      description: Fetches a list of parameters associated with a specific category
+        ID.
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: List of parameters for the category
+          schema:
+            items:
+              $ref: '#/definitions/models.Parameter'
+            type: array
+        "400":
+          description: Invalid category ID format
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction or unable to fetch parameters
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get parameters of a category by ID
+      tags:
+      - categories
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user using email and password, and returns a JWT
+        token upon successful authentication.
+      parameters:
+      - description: User credentials (Only `Email` and `Password` fields are used)
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserLogin'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWT token returned upon successful login
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid credentials provided
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: User not found or incorrect password
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction, try later
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Login a user
+      tags:
+      - auth
+  /manufacturers:
+    get:
+      consumes:
+      - application/json
+      description: Get all available manufacturers
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: 5
+        description: Items per page for pagination
+        in: query
+        name: limit
+        type: integer
+      - default: id
+        description: Sort field
+        in: query
+        name: sort
+        type: string
+      - description: Search by manufacturer name
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Manufacturer'
+            type: array
+      summary: Get list of manufacturers
+      tags:
+      - manufacturers
+  /manufacturers/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get manufacturer info by ID
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Manufacturer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Manufacturer'
+      summary: Get manufacturer
+      tags:
+      - manufacturers
+  /manufacturers/{id}/categories:
+    get:
+      description: Fetches a list of categories associated with a specific manufacturer
+        ID.
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Manufacturer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: List of categories for the manufacturer
+          schema:
+            items:
+              $ref: '#/definitions/models.Category'
+            type: array
+        "400":
+          description: Invalid manufacturer ID format
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction or unable to fetch categories
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get categories of a manufacturer by ID
+      tags:
+      - manufacturers
+  /orders:
+    get:
+      consumes:
+      - application/json
+      description: Get all orders
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: 5
+        description: Items per page for pagination
+        in: query
+        name: limit
+        type: integer
+      - default: id
+        description: Sort field
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ClientOrder'
+            type: array
+        "400":
+          description: Invalid sort param
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction or unable to fetch categories
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get list of client orders
+      tags:
+      - orders
+    post:
+      consumes:
+      - application/json
+      description: Create a new order for the authenticated user with a list of products.
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Order data
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/models.ClientOrderUpdate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: order successfully created
+          schema:
+            type: string
+        "400":
+          description: 'Bad Request: wrong order data format or no products provided'
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: 'Unauthorized: check authorization'
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: 'Internal Server Error: server malfunction, try later'
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Add a new client order
+      tags:
+      - orders
+  /orders/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get order by ID
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ClientOrder'
+      summary: Get specific order
+      tags:
+      - orders
+    put:
+      description: Updates the details of an existing client order identified by the
+        order ID. Requires the user to be authenticated via an Authorization token.
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated client order details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ClientOrderUpdate'
+      responses:
+        "200":
+          description: Updated {number} rows
+          schema:
+            type: string
+        "400":
+          description: Wrong ID format or wrong order data format
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: 'Unauthorized: Invalid or missing token'
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction, unable to update order
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Update an existing client order
+      tags:
+      - orders
+  /orders/{id}/products:
+    get:
+      description: Retrieves a list of products associated with a specific order,
+        requiring the user to be authenticated via an Authorization token.
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: List of products in the order
+          schema:
+            items:
+              $ref: '#/definitions/models.ProductInOrder'
+            type: array
+        "400":
+          description: Wrong ID format
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: 'Unauthorized: Invalid or missing token'
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction, unable to fetch products from order
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get products from a specific order
+      tags:
+      - orders
+    put:
+      description: Updates the quantity of a product in a specific order, requiring
+        the user to be authenticated via an Authorization token.
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: ProductInOrder object
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProductInOrderUpdate'
+      responses:
+        "200":
+          description: Updated rows count message
+          schema:
+            type: string
+        "400":
+          description: Invalid product data format or wrong ID
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: 'Unauthorized: Invalid or missing token'
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction, unable to update product in order
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Update a product in an order
+      tags:
+      - orders
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: Get all available products
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: 5
+        description: Items per page for pagination
+        in: query
+        name: limit
+        type: integer
+      - default: id
+        description: Sort field
+        in: query
+        name: sort
+        type: string
+      - description: Search by product name
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Product'
+            type: array
+      summary: Get list of products
+      tags:
+      - products
+  /products/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get product by id
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Product'
+      summary: Get product indo
+      tags:
+      - products
+  /products/{id}/params:
+    get:
+      description: Fetches a list of parameters associated with a specific product
+        ID.
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: List of parameters for the product
+          schema:
+            items:
+              $ref: '#/definitions/models.Parameter'
+            type: array
+        "400":
+          description: Invalid product ID format
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction or unable to fetch parameters
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get parameters of a product by ID
+      tags:
+      - products
+  /receipt_types:
+    get:
+      description: Fetches a list of all receipt types from the database.
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      responses:
+        "200":
+          description: List of receipt types
+          schema:
+            items:
+              $ref: '#/definitions/models.Receipt'
+            type: array
+        "500":
+          description: Server malfunction, unable to fetch receipt types
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get all receipt types
+      tags:
+      - receipts
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account with the provided credentials (email
+        and password).
+      parameters:
+      - description: User credentials (Only `Name`, `Phone`, `Email`, `Password` fields
+          are used)
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User successfully created
+          schema:
+            type: string
+        "400":
+          description: Invalid credentials provided
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: User creation failed or server malfunction
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /user_info:
+    get:
+      description: Fetches user details using the provided Authorization header token.
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      responses:
+        "200":
+          description: User information
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: 'Unauthorized: Invalid or missing token'
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction, unable to retrieve user info
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get user information from the provided authorization token
+      tags:
+      - users
+    put:
+      description: Updates the user information using the provided authorization token
+        and new user data.
+      parameters:
+      - description: User token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Updated user information (Only `Name`, `Phone`, `Password` fields
+          are used)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      responses:
+        "200":
+          description: Updated {number} rows
+          schema:
+            type: string
+        "400":
+          description: Invalid user data format
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: 'Unauthorized: Invalid or missing token'
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction, unable to update user
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Update user information
+      tags:
+      - users
+  /users:
+    get:
+      description: Fetch a list of all users from the database.
+      parameters:
+      - description: Admin token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: 5
+        description: Items per page for pagination
+        in: query
+        name: limit
+        type: integer
+      - default: id
+        description: Sort field
+        in: query
+        name: sort
+        type: string
+      - description: Search by user email
+        in: query
+        name: email
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of all users
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "400":
+          description: Wrong sort parameter
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction or users selection failed
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Retrieve all users
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      description: Deletes a user from the database by their ID.
+      parameters:
+      - description: Admin token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: User ID to be deleted
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: User successfully deleted
+          schema:
+            type: string
+        "400":
+          description: Invalid User ID format
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction or user deletion failed
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Remove a user
+      tags:
+      - users
+    get:
+      description: Fetch user from the database by ID.
+      parameters:
+      - description: Admin token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Requested user info
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Invalid id provided
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server malfunction or users selection failed
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Retrieve specified users
+      tags:
+      - users
+swagger: "2.0"
